@@ -8,11 +8,10 @@ def list_saved(by_dir=False, by_file=False, by_db=False):
     if by_dir:
         print('Listing Episodes by MP3 file.')
         for _e in os.listdir(settings.EPISODE_FOLDER):
-            if _e is not settings.EPISODES_FILE:
-                _saved.append(_e.replace('_', '/'))
+            _saved.append(_e[:-4])
     elif by_file:
         print('Listing Episodes from text file.')
-        with open(os.path.join(settings.EPISODE_FOLDER, settings.EPISODES_FILE), 'r') as _f:
+        with open(settings.EPISODES_FILE, 'r', encoding='utf-8') as _f:
             for _e in _f.read().split('\n'):
                 _saved.append(_e)
     elif by_db:
@@ -30,7 +29,7 @@ def filter_title(filter_word=None):
     _eps = list_saved(by_dir=True)
     for _ep in _eps:
         if _ep[-3:] == 'mp3':
-            _ep = _ep[:-4].replace('_', '/')
+            _ep = _ep[:-4]
             if filter_word is not None or '':
                 if filter_word in _ep:
                     print(_ep)
