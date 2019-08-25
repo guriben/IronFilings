@@ -23,10 +23,10 @@ def get_episodes(url):
             _soup = bs4.BeautifulSoup(_request.text, 'lxml')
             _posts = _soup.find_all('item')
             for _post in _posts:
-                _title = _post.find('title').text
-                _mp3_link = _post.find('enclosure')['url']
+                _title = _post.find('title').text.strip()
+                _mp3_link = _post.find('enclosure')['url'].strip()
                 _synopsis = _post.find('description').text[3:-4].strip()
-                _published = _post.find('pubdate').text
+                _published = _post.find('pubdate').text.strip()
                 _episodes.append({'title': _title,
                                   'synopsis': _synopsis,
                                   'link': _mp3_link,
@@ -53,10 +53,9 @@ def save_episode(episode):
             print('Getting            : "{}"'.format(title))
             mp3 = requests.get(url=link)
             with open(os.path.join(EPISODE_FOLDER, '{}.mp3'.format(title.replace('/', '_'))), 'wb') as ep:
-                print('Saving MP3...')
                 ep.write(mp3.content)
                 with open(EPISODES_FILE, 'a') as _f:
-                    _f.write('\n{}\t"{}"\t{}'.format(title, synopsis, published))
+                    _f.write('{}\t"{}"\t{}\n'.format(title, synopsis, published))
         except FileNotFoundError:
             print('Could not write    : {}.mp3'.format(title))
         except ConnectionError:
@@ -68,7 +67,7 @@ def synchronise(url):
     :param: the URL to the episode feed with GET user authentication
     check if there are any new episodes and get them if necessary
     """
-    print('Synchronise        : {}'.format(url))
+    print('Synchronise        : {}'.format(url.split('?')[0]))
     saved_episodes = []
     for file in os.listdir(EPISODE_FOLDER):
         saved_episodes.append(file[:-4].replace('_', '/'))
@@ -101,8 +100,10 @@ def load_config(file=CONFIG_FILE):
                 return config
             except Exception as e:
                 print(e)
+                exit(1)
     except FileNotFoundError:
         print('Could not load config from {}'.format(file))
+        exit(1)
 
 
 if __name__ == '__main__':
