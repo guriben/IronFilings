@@ -5,24 +5,22 @@ import bs4
 
 
 USER_DIR = os.path.expanduser('~')
-EPISODE_FOLDER = os.path.join(USER_DIR, 'projects', 'IronFilings', 'IFS-Episodes')
 CONFIG_FILE = os.path.join(USER_DIR, 'projects', 'IronFilings', 'ifs', 'ifs.json')
+EPISODE_FOLDER = os.path.join(USER_DIR, 'projects', 'IronFilings', 'IFS-Episodes')
 EPISODES_FILE = 'ifs-episodes.txt'
 
 
 def get_episodes(url):
     """
-    get the RSS XML and parse it into a list of episode dictionaries
+    get the RSS XML and parse it into a list of episode dictionaries using BS4 and lxml parser
     :param: url composed URL with authentication uuid
-    :return: list of episode dictionaries [{'title': title, 'url': url_to_mp3}]
-    :raises: Connection Error
+    :return: list of episode dictionaries [{'title': title, 'synopsis': description, 'url': url_to_mp3}]
     """
     _episodes = []
     try:
         _request = requests.get(url)
         if _request.status_code == requests.codes.ok:
-            _xml = _request.text
-            _soup = bs4.BeautifulSoup(_xml, 'lxml')
+            _soup = bs4.BeautifulSoup(_request.text, 'lxml')
             _posts = _soup.find_all('item')
             for _post in _posts:
                 _title = _post.find('title').text
@@ -51,7 +49,7 @@ def save_episode(episode):
         try:
             print('Getting            : "{}"'.format(title))
             mp3 = requests.get(url=link)
-            with open(os.path.join(EPISODE_FOLDER, '{}.mp3'.format(title)), 'wb') as ep:
+            with open(os.path.join(EPISODE_FOLDER, '{}.mp3'.format(title.replace('/', '_'))), 'wb') as ep:
                 ep.write(mp3.content)
                 with open(EPISODES_FILE, 'a') as _f:
                     print('Saving MP3...')
@@ -70,7 +68,7 @@ def synchronise(url):
     print('Synchronise        : {}'.format(url))
     saved_episodes = []
     for file in os.listdir(EPISODE_FOLDER):
-        saved_episodes.append(file[:-4])
+        saved_episodes.append(file[:-4].replace('_', '/'))
     print('Library has        : {} episodes'.format(len(saved_episodes)))
     available_episodes = get_episodes(url)
     print('Available episodes : {}'.format(len(available_episodes)))
@@ -86,16 +84,27 @@ def synchronise(url):
     print('Done!')
 
 
-def load(file):
-    with open(file, 'r', encoding='utf-8') as f:
-        print('Loading from       : {}'.format(file))
-        config = json.load(f)
-        return config
+def load_config(file):
+    """
+    Try to load from JSON configuration file
+    :param file: valid path to JSON file
+    :return:
+    """
+    try:
+        with open(file, 'r', encoding='utf-8') as f:
+            print('Loading from       : {}'.format(file))
+            try:
+                config = json.load(f)
+                return config
+            except Exception as e:
+                print(e)
+    except FileNotFoundError:
+        print('Could not load config from {}'.format(file))
 
 
 if __name__ == '__main__':
     """ run as script """
-    # TODO: escape "\" character in any file names, and make sure that's reflected in saved names / compare
+    # TODO: enable more than 1 patreon subscription
     # TODO: browser / player?
-    pod = load(CONFIG_FILE)
+    pod = load_config(CONFIG_FILE)
     synchronise(pod['base'] + pod['podcast'] + pod['get'] + pod['auth'])
