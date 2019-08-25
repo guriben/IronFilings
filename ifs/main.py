@@ -2,6 +2,7 @@ import requests
 import bs4
 import os
 
+
 PATREON_RSS = 'https://www.patreon.com/rss/'
 PODCAST = 'topflighttimemachine'
 GET = '?auth='
@@ -68,7 +69,7 @@ def synchronise(url):
     :param: the URL to the episode feed with GET user authentication
     check if there are any new episodes and get them if necessary
     """
-    print('Synchronise!')
+    print('Synchronise        : {}'.format(url))
     saved_episodes = []
     for file in os.listdir(EPISODE_FOLDER):
         saved_episodes.append(file[:-4])
@@ -89,4 +90,7 @@ def synchronise(url):
 
 if __name__ == '__main__':
     """ run as script """
+    # TODO: escape \ character in filenames, and make sure that's reflected in saved names / compare
+    # TODO: use config file with parser
+    # TODO: browser / player?
     synchronise(PATREON_RSS + PODCAST + GET + AUTH_STRING)
