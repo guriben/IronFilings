@@ -110,6 +110,6 @@ if __name__ == '__main__':
     # TODO: enable more than 1 patreon subscription / JSON config improvements
     # TODO: browser / player?
     # TODO: group by (e.g "Keegan" / "Melchester")
-    # TODO: db instead of file indexing
+    # TODO: sqlite instead of file indexing
     pod = load_config()
     synchronise(pod['base'] + pod['podcast'] + pod['get'] + pod['auth'])

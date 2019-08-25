@@ -2,5 +2,5 @@
   "base" : "https://www.patreon.com/rss/",
   "podcast" : "topflighttimemachine",
   "get" : "?auth=",
-  "auth" : "mS--Fe5i4b3IHiy54p540--WuO5bwI5u"
+  "auth" : "put--auth--key--here"
 }
