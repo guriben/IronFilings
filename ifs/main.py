@@ -1,14 +1,12 @@
+import os
+import json
 import requests
 import bs4
-import os
 
 
-PATREON_RSS = 'https://www.patreon.com/rss/'
-PODCAST = 'topflighttimemachine'
-GET = '?auth='
-AUTH_STRING = 'mS--Fe5i4b3IHiy54p540--WuO5bwI5u'
 USER_DIR = os.path.expanduser('~')
 EPISODE_FOLDER = os.path.join(USER_DIR, 'projects', 'IronFilings', 'IFS-Episodes')
+CONFIG_FILE = os.path.join(USER_DIR, 'projects', 'IronFilings', 'ifs', 'ifs.json')
 EPISODES_FILE = 'ifs-episodes.txt'
 
 
@@ -88,9 +86,16 @@ def synchronise(url):
     print('Done!')
 
 
+def load(file):
+    with open(file, 'r', encoding='utf-8') as f:
+        print('Loading from       : {}'.format(file))
+        config = json.load(f)
+        return config
+
+
 if __name__ == '__main__':
     """ run as script """
-    # TODO: escape \ character in filenames, and make sure that's reflected in saved names / compare
-    # TODO: use config file with parser
+    # TODO: escape "\" character in any file names, and make sure that's reflected in saved names / compare
     # TODO: browser / player?
-    synchronise(PATREON_RSS + PODCAST + GET + AUTH_STRING)
+    pod = load(CONFIG_FILE)
+    synchronise(pod['base'] + pod['podcast'] + pod['get'] + pod['auth'])
