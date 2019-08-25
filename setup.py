@@ -5,7 +5,7 @@ setup(
     version='2019.8.26',
     packages=['ifs'],
     url='',
-    license='GNU 3.0',
+    license='Free',
     author='Ben Smith',
     author_email='guriben@gmail.com',
     description='Tool to retrieve MP3s from Patreon for "Top Flight Time Machine" '
