@@ -28,12 +28,13 @@ def get_episodes(url):
             for _post in _posts:
                 _title = _post.find('title').text
                 _mp3_link = _post.find('enclosure')['url']
-                _synopsis = _post.find('description').text[3:-4]
+                _synopsis = _post.find('description').text[3:-4].strip()
                 _episodes.append({'title': _title,
                                   'synopsis': _synopsis,
                                   'link': _mp3_link})
     except ConnectionError as connection_error:
         print(connection_error)
+        raise
     return _episodes
 
 
@@ -46,20 +47,20 @@ def save_episode(episode):
     synopsis = episode['synopsis']
     link = episode['link']
     if os.path.exists(os.path.join(EPISODE_FOLDER, '{}.mp3'.format(title))):
-        print('Apparently got "{}" already.'.format(title))
+        print('Already got        : "{}"'.format(title))
     else:
         try:
-            print('Getting: ', title)
-            _mp3 = requests.get(url=link)
-            with open(os.path.join(EPISODE_FOLDER, '{}.mp3'.format(title)), 'wb') as _ep:
-                print('Saving MP3...')
-                _ep.write(_mp3.content)
+            print('Getting            : "{}"'.format(title))
+            mp3 = requests.get(url=link)
+            with open(os.path.join(EPISODE_FOLDER, '{}.mp3'.format(title)), 'wb') as ep:
+                ep.write(mp3.content)
                 with open(EPISODES_FILE, 'a') as _f:
+                    print('Saving MP3...')
                     _f.write('{}\t"{}"\n'.format(title, synopsis))
         except FileNotFoundError:
-            print('Could not write: {}'.format(title))
+            print('Could not write    : {}.mp3'.format(title))
         except ConnectionError:
-            print('Could not get  : {}'.format(title))
+            print('Could not get      : {}'.format(title))
 
 
 def synchronise(url):
@@ -67,6 +68,7 @@ def synchronise(url):
     :param: the URL to the episode feed with GET user authentication
     check if there are any new episodes and get them if necessary
     """
+    print('Synchronise!')
     saved_episodes = []
     for file in os.listdir(EPISODE_FOLDER):
         saved_episodes.append(file[:-4])
@@ -75,7 +77,7 @@ def synchronise(url):
     print('Available episodes : {}'.format(len(available_episodes)))
     if len(saved_episodes) < len(available_episodes):
         new_episodes = [e for e in available_episodes if e not in saved_episodes]
-        print('Trying to get  : {} new episodes'.format(len(new_episodes)))
+        print('Trying to get      : {} new episodes'.format(len(new_episodes) - len(saved_episodes)))
         for episode in new_episodes:
             if not os.path.exists(os.path.join(EPISODE_FOLDER, '{}.mp3'.format(episode['title']))):
                 save_episode(episode)
