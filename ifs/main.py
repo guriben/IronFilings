@@ -26,9 +26,11 @@ def get_episodes(url):
                 _title = _post.find('title').text
                 _mp3_link = _post.find('enclosure')['url']
                 _synopsis = _post.find('description').text[3:-4].strip()
+                _published = _post.find('pubdate').text
                 _episodes.append({'title': _title,
                                   'synopsis': _synopsis,
-                                  'link': _mp3_link})
+                                  'link': _mp3_link,
+                                  'published': _published})
     except ConnectionError as connection_error:
         print(connection_error)
         raise
@@ -37,12 +39,13 @@ def get_episodes(url):
 
 def save_episode(episode):
     """
-    get the MP3 for the episode title, save it to disk and update the file
+    get the MP3 for the episode title, save it to disk and update the "library" file
     :param episode: episode dictionary
     """
     title = episode['title']
     synopsis = episode['synopsis']
     link = episode['link']
+    published = episode['published']
     if os.path.exists(os.path.join(EPISODE_FOLDER, '{}.mp3'.format(title))):
         print('Already got        : "{}"'.format(title))
     else:
@@ -50,10 +53,10 @@ def save_episode(episode):
             print('Getting            : "{}"'.format(title))
             mp3 = requests.get(url=link)
             with open(os.path.join(EPISODE_FOLDER, '{}.mp3'.format(title.replace('/', '_'))), 'wb') as ep:
+                print('Saving MP3...')
                 ep.write(mp3.content)
                 with open(EPISODES_FILE, 'a') as _f:
-                    print('Saving MP3...')
-                    _f.write('{}\t"{}"\n'.format(title, synopsis))
+                    _f.write('\n{}\t"{}"\t{}'.format(title, synopsis, published))
         except FileNotFoundError:
             print('Could not write    : {}.mp3'.format(title))
         except ConnectionError:
@@ -71,8 +74,8 @@ def synchronise(url):
         saved_episodes.append(file[:-4].replace('_', '/'))
     print('Library has        : {} episodes'.format(len(saved_episodes)))
     available_episodes = get_episodes(url)
-    print('Available episodes : {}'.format(len(available_episodes)))
     if len(saved_episodes) < len(available_episodes):
+        print('Available episodes : {}'.format(len(available_episodes)))
         new_episodes = [e for e in available_episodes if e not in saved_episodes]
         print('Trying to get      : {} new episodes'.format(len(new_episodes) - len(saved_episodes)))
         for episode in new_episodes:
@@ -84,7 +87,7 @@ def synchronise(url):
     print('Done!')
 
 
-def load_config(file):
+def load_config(file=CONFIG_FILE):
     """
     Try to load from JSON configuration file
     :param file: valid path to JSON file
@@ -104,7 +107,9 @@ def load_config(file):
 
 if __name__ == '__main__':
     """ run as script """
-    # TODO: enable more than 1 patreon subscription
+    # TODO: enable more than 1 patreon subscription / JSON config improvements
     # TODO: browser / player?
-    pod = load_config(CONFIG_FILE)
+    # TODO: group by (e.g "Keegan" / "Melchester")
+    # TODO: db instead of file indexing
+    pod = load_config()
     synchronise(pod['base'] + pod['podcast'] + pod['get'] + pod['auth'])
