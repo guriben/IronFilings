@@ -14,7 +14,10 @@ def get_episodes(url):
     """
     get the RSS XML and parse it into a list of episode dictionaries using BS4 and lxml parser
     :param: url composed URL with authentication uuid
-    :return: list of episode dictionaries [{'title': title, 'synopsis': description, 'url': url_to_mp3}]
+    :return: list of episode dictionaries [{'title': title,
+                                            'synopsis': description,
+                                            'url': url_to_mp3,
+                                            'published': timestamp}]
     """
     _episodes = []
     try:
@@ -51,11 +54,13 @@ def save_episode(episode):
     else:
         try:
             print('Getting            : "{}"'.format(title))
+            if '/' in title:
+                print('/ character will be replaced with _')
             mp3 = requests.get(url=link)
             with open(os.path.join(EPISODE_FOLDER, '{}.mp3'.format(title.replace('/', '_'))), 'wb') as ep:
                 ep.write(mp3.content)
                 with open(EPISODES_FILE, 'a') as _f:
-                    _f.write('{}\t"{}"\t{}\n'.format(title, synopsis, published))
+                    _f.write('{}\t"{}"\t{}\n'.format(title.replace('/', '_'), synopsis, published))
         except FileNotFoundError:
             print('Could not write    : {}.mp3'.format(title))
         except ConnectionError:
@@ -82,8 +87,6 @@ def synchronise(url):
                 save_episode(episode)
     else:
         print('No new episodes.')
-        exit(0)
-    print('Done!')
 
 
 def load_config(file=CONFIG_FILE):
@@ -106,11 +109,28 @@ def load_config(file=CONFIG_FILE):
         exit(1)
 
 
+def episode_filter(title_word):
+    filtered = []
+    try:
+        with open(EPISODES_FILE, 'r') as file:
+            for line in file.readlines():
+                title, synopsis, published = line.split('\t')
+                if title_word in title:
+                    filename = os.path.join(EPISODE_FOLDER, '{}.mp3'.format(title))
+                    title = title.replace('_', '/')
+                    filtered.append({'title': title, 'synopsis': synopsis, 'published': published.strip(),
+                                     'filename': filename})
+    except FileNotFoundError:
+        raise
+    return filtered
+
+
 if __name__ == '__main__':
     """ run as script """
     # TODO: enable more than 1 patreon subscription / JSON config improvements
     # TODO: browser / player?
-    # TODO: group by (e.g "Keegan" / "Melchester")
     # TODO: sqlite instead of file indexing
     pod = load_config()
     synchronise(pod['base'] + pod['podcast'] + pod['get'] + pod['auth'])
+    for ep in episode_filter('Melchester'):
+        print(ep)

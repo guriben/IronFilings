@@ -2,5 +2,7 @@
   "base" : "https://www.patreon.com/rss/",
   "podcast" : "topflighttimemachine",
   "get" : "?auth=",
-  "auth" : "put--auth--key--here"
+  "auth" : "mS--Fe5i4b3IHiy54p540--WuO5bwI5u",
+  "episode_file": "ifs-episodes.txt",
+  "episode_storage": "seekrit--goes--here"
 }
